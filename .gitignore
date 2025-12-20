@@ -1,35 +1,52 @@
-# Python
-__pycache__
+# Python caches / build artifacts
+__pycache__/
 *.pyc
-*.egg-info
-dist
+*.pyo
+*.egg-info/
+dist/
+build/
 
-# Log
-*.log
-*.log.*
+# Ignore JSON/JSONL logs
 *.json
 *.jsonl
 
-# Data
-!**/alpaca-data-conversation.json
+# Jupyter / Notebook checkpoints
+.ipynb_checkpoints/
 
-# Editor
-.idea
+# Logs and temporary outputs
+*.log
+controller.log.*
+gradio_web_server.log.*
+wandb/
+output/
+
+# Model weights / checkpoints
+checkpoints/
+ckpts*/
+*.pt
+*.ckpt
+*.h5
+*.onnx
+
+# Playground data (keep prompts, ignore everything else)
+playground/data/
+!playground/data/prompts/
+!playground/data/prompts/**/*
+!playground/data/coco2014_val_gpt4_qa_30x3.jsonl
+
+# Serve images / demos
+serve_images/
+
+# LLaVA package / virtual env / editor
+.venv/
+env/
+.idea/
 *.swp
-
-# Other
 .DS_Store
-wandb
-output
+llava.egg-info/
 
-checkpoints
-ckpts*
-
-.ipynb_checkpoints
-*.ipynb
-
-# DevContainer
+# DevContainer (keep tracked)
 !.devcontainer/*
 
-# Demo
-serve_images/
+# Small data file you want to include
+!**/alpaca-data-conversation.json
