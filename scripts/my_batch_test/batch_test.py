@@ -72,10 +72,11 @@ for current_image in os.listdir(images):
         results.append({
             'image': current_image,
             'prompt': prompt_text,
+            "prompt_label": prompt_entry.get('label', '') if isinstance(prompt_entry, dict) else '',
             'answer': answer
         })
 
 with open(results_file, 'w') as f:
     json.dump(results, f, indent=4)
 
-print(f"Works. Results saved to {results_file}")
+print(f"Finished. Results saved to {results_file}")
