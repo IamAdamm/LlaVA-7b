@@ -1,6 +1,7 @@
 import os
 import json
 import torch
+import torch.nn.functional as F
 from datetime import datetime
 from PIL import Image
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
@@ -10,7 +11,7 @@ from llava.mm_utils import process_images, tokenizer_image_token
 
 # Define paths and device
 project_root = '/data/llava/LLaVA'
-prompts = os.path.join(project_root, 'playground/data/prompts/myPrompts/prompts.json')
+prompts = os.path.join(project_root, 'prompts/prompts.json')
 images = os.path.join(project_root, 'images')
 results_file = os.path.join(project_root, 'results/results.json')
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -73,7 +74,7 @@ for entry in prompt_data:
                 return_tensors="pt"
             ).unsqueeze(0).to(device)
 
-            # Generate response
+            # Generate response with scores for confidence calculation
             with torch.inference_mode():
                 outputs = model.generate(
                     input_ids,
@@ -81,10 +82,35 @@ for entry in prompt_data:
                     image_sizes=image_sizes,
                     max_new_tokens=128,
                     do_sample=False,
-                    use_cache=True
+                    use_cache=True,
+                    output_scores=True,
+                    return_dict_in_generate=True
                 )
             
-            answer = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0].strip()
+            # Get the generated tokens and scores
+            generated_ids = outputs.sequences
+            scores = outputs.scores  # tuple of logits for each generated token
+            
+            # Calculate confidence as the probability of the first generated token
+            # (which should be A, B, C, or D for multiple choice)
+            if scores and len(scores) > 0:
+                first_token_logits = scores[0][0]  # logits for the first generated token
+                probs = F.softmax(first_token_logits, dim=-1)
+                # Get the token that was actually generated (first new token after input)
+                # The scores correspond to the generated tokens, so we use the token ID
+                # from the first position after input_ids
+                new_token_start_idx = input_ids.shape[1]
+                if generated_ids.shape[1] > new_token_start_idx:
+                    first_generated_token = generated_ids[0, new_token_start_idx]
+                    confidence = probs[first_generated_token].item()
+                else:
+                    # If sequences length is less than expected, get the first generated token ID from scores
+                    first_generated_token = torch.argmax(probs).item()
+                    confidence = probs[first_generated_token].item()
+            else:
+                confidence = None
+            
+            answer = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
             
             # Store result
             results.append({
@@ -92,6 +118,7 @@ for entry in prompt_data:
                 'prompt': prompt_text,
                 'prompt_label': prompt_label,
                 'answer': answer,
+                'confidence': confidence,
                 'ground_truth': ground_truth_label,
                 'timestamp': str(datetime.now())
             })
