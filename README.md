@@ -1,9 +1,3 @@
-A clean README you can use (tailored to what you actually did)
-
-You can copy this almost 1:1.
-
-⸻
-
 Prompt Sensitivity Analysis in Vision-Language Models
 
 A Case Study Using LLaVA
