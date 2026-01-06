@@ -1,98 +1,119 @@
-Prompt Sensitivity Analysis in Vision-Language Models
+Prompt Sensitivity in Vision–Language Models
 
-A Case Study Using LLaVA
+A Controlled Spatial Reasoning Study on LLaVA
 
-Overview
+This repository contains code, prompts, and analysis for a controlled study on prompt sensitivity in Vision–Language Models (VLMs). We evaluate how prompt wording, answer option ordering, and structured reasoning prompts affect spatial reasoning performance in LLaVA on simple spatial relations.
 
-This project investigates prompt sensitivity in Vision-Language Models (VLMs), focusing on how wording choices, option ordering, and multiple-choice formatting affect model accuracy.
+The project focuses on prompting alone — no model fine-tuning, no architectural changes.
 
-Using the LLaVA model as a representative VLM, we conduct controlled experiments on spatial reasoning tasks (e.g., left/right, above/below) and analyze how small prompt variations can lead to large performance differences — including systematic failures below random chance.
 
-⸻
+What This Project Shows
+	•	LLaVA’s spatial reasoning is highly sensitive to prompt design
+	•	Shuffling multiple-choice options can push accuracy below random chance
+	•	High confidence does not imply correct visual grounding
+	•	Structured reasoning prompts (CoT, Scene-Graph CoT) significantly improve accuracy
+	•	Scene-Graph CoT performs best by explicitly separating perception and reasoning
 
-Research Questions
-	•	How sensitive is a VLM’s accuracy to:
-	•	Multiple-choice wording?
-	•	Option shuffling?
-	•	Semantically similar spatial terms (e.g., above vs under)?
-	•	Can prompt variations induce systematic bias rather than random error?
-	•	Do certain prompt structures cause the model to rely on linguistic heuristics instead of visual grounding?
-
-⸻
-
-Experimental Setup
-
-Model
-	•	LLaVA (pretrained)
-	•	Used in inference-only mode
-	•	No finetuning or training performed
-
-Access Method
-	•	Local inference via:
-	•	Gradio web interface (localhost)
-	•	LLaVA CLI / evaluation scripts
 
 Task
-	•	Image-based spatial reasoning
-	•	Multiple-choice questions with controlled prompt variants:
-	•	Fixed order
-	•	Shuffled order
-	•	Lexical variations (“above”, “below”, “under”)
 
-⸻
+Spatial relations (4-way classification):
+	•	Left
+	•	Right
+	•	On top
+	•	Under
 
-Prompt Variants Tested
+Dataset:
+	•	WhatsUp (Control Group 2)
+	•	418 controlled images
+	•	Balanced labels (~25% per relation)
+  
 
-Examples of tested configurations include:
-	•	Standard multiple-choice
-	•	Multiple-choice with shuffled answer options
-	•	Multiple-choice with semantically varied spatial terms
-	•	Combined shuffling + wording variation
+Prompt Types Evaluated
 
-Each variant was evaluated independently to isolate its effect on accuracy.
+Multiple Choice (Baseline)
+	•	Standard WhatsUp-style prompts
+	•	Variants with:
+	•	Shuffled answer options
+	•	Alternative wording (above / under / below)
+	•	Combined shuffling + wording
 
-⸻
+Chain-of-Thought (CoT)
+	•	Model reasons step-by-step before giving a final answer
+	•	Final output mapped to one of the four spatial relations
 
-Key Findings (Summary)
-	•	Accuracy varies significantly across prompt formulations
-	•	Certain combinations (e.g., shuffled options + “above”) led to accuracy far below random chance
-	•	This suggests systematic heuristic bias, not simple confusion
-	•	Models may prioritize textual patterns and option position over visual grounding
+Scene-Graph Chain-of-Thought
+	•	Two-stage reasoning:
+	1.	Explicit object and relation description (scene graph)
+	2.	Final spatial inference from the graph
+	•	Strongly constrains reasoning to visual relations
 
-⸻
 
-Interpretation
+Key Results (Summary)
 
-Results indicate that:
-	•	Vision-language models can apply consistent but incorrect linguistic heuristics
-	•	Small prompt changes can dramatically alter behavior
-	•	High-level performance metrics may hide fragile reasoning mechanisms
+Prompt Type	Accuracy	Confidence
+Multiple Choice	59.81%	48.68%
+Chain-of-Thought	66.03%	68.95%
+Scene-Graph CoT	70.10%	60.99%
 
-⸻
+Multiple-choice prompts show strong ordering and wording biases, while structured reasoning significantly improves robustness and accuracy.
 
-Limitations & Future Work
-	•	Only multiple-choice formats tested so far
-	•	Chain-of-Thought and free-form reasoning not yet evaluated
-	•	Future experiments will:
-	•	Compare CoT vs non-CoT prompting
-	•	Analyze attention to image tokens
-	•	Extend evaluation to additional VLMs
 
-⸻
+Repository Structure
 
-Model Attribution
+.
+├── prompts/
+│   └── prompts.json
+├── results/
+│   └── results.json
+├── scripts/
+│   ├── run_experiment.py
+│   ├── answer_extraction.py
+│   └── results_analysis.py
+├── figures/
+│   ├── MultipleChoiceAccuracy.png
+│   ├── MultipleChoiceAccuracyPerGroundTruthOption.png
+│   ├── AllPromptsAccuracy.png
+│   └── AllPromptsAccuracyPerGroundTruthOption.png
+├── notebook.md
+└── README.md
 
-This project uses LLaVA, developed by Liu et al.
-	•	Official repository: https://github.com/haotian-liu/LLaVA
-	•	Papers:
-	•	Visual Instruction Tuning (NeurIPS 2023)
-	•	Improved Baselines with Visual Instruction Tuning (2023)
 
-No modifications were made to the LLaVA model or training pipeline.
 
-⸻
+Running the Code
+	1.	Set up LLaVA and required checkpoints
+	2.	Install dependencies
+	3.	Run experiments:
 
-License
+python scripts/run_experiment.py
 
-This project follows the license terms of the original LLaVA model and datasets.
-See the official LLaVA repository for full license details.
+
+	4.	Analyze results:
+
+python scripts/results_analysis.py
+
+
+
+Experiments log results locally using Weights & Biases (offline mode).
+
+
+Why This Matters
+
+These experiments show that many VLM failures in spatial reasoning are not due to missing visual information, but to prompt-induced heuristic shortcuts. Small prompt changes can completely alter model behavior, confidence, and failure modes.
+
+Structured prompts that explicitly guide perception and reasoning significantly reduce these effects.
+
+
+Limitations
+	•	Controlled images only (WhatsUp subset)
+	•	Simple spatial relations
+	•	Single model (LLaVA)
+	•	No architectural or attention-level intervention
+
+
+Author
+
+Adam Astamir
+University of Hamburg
+
+Just say the word.
